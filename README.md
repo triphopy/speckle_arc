@@ -38,10 +38,7 @@ speckle_arc/
 |- src/
 |  \- speckle_arc/
 |     |- __init__.py
-|     |- main.py
 |     \- mqtt_to_speckle.py
-|- tests/
-|  \- __init__.py
 |- docker-compose.yml
 |- .env.example
 |- .gitignore
@@ -69,12 +66,6 @@ Copy-Item .env.example .env
 
 ## Run
 
-Default starter command:
-
-```powershell
-speckle-arc
-```
-
 MQTT to Speckle bridge:
 
 ```powershell
@@ -84,7 +75,6 @@ speckle-arc-mqtt
 You can also run modules directly:
 
 ```powershell
-python -m speckle_arc.main
 python -m speckle_arc.mqtt_to_speckle
 ```
 

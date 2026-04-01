@@ -19,7 +19,6 @@ dependencies = [
 ]
 
 [project.scripts]
-speckle-arc = "speckle_arc.main:main"
 speckle-arc-mqtt = "speckle_arc.mqtt_to_speckle:main"
 
 [tool.setuptools]
