@@ -1,0 +1,16 @@
+[Unit]
+Description=Speckle ARC MQTT Bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=system
+WorkingDirectory=/home/system/speckle-stack
+EnvironmentFile=/home/system/speckle-stack/.env
+ExecStart=/home/system/speckle-stack/.venv/bin/speckle-arc-mqtt
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

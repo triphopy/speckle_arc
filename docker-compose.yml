@@ -1,0 +1,103 @@
+services:
+  speckle-server:
+    image: speckle/speckle-server:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      CANONICAL_URL: "${SPECKLE_CANONICAL_URL}"
+      FRONTEND_ORIGIN: "${SPECKLE_FRONTEND_ORIGIN}"
+      SESSION_SECRET: "${SPECKLE_SESSION_SECRET}"
+      POSTGRES_URL: "postgresql://speckle:${SPECKLE_POSTGRES_PASSWORD}@postgres/speckle"
+      REDIS_URL: "redis://redis"
+      S3_ENDPOINT: "http://minio:9000"
+      S3_ACCESS_KEY: "${SPECKLE_S3_ACCESS_KEY}"
+      S3_SECRET_KEY: "${SPECKLE_S3_SECRET_KEY}"
+      S3_BUCKET: "${SPECKLE_S3_BUCKET}"
+      S3_CREATE_BUCKET: "true"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    networks:
+      - speckle-net
+
+  speckle-frontend:
+    image: speckle/speckle-frontend-2:latest
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      NUXT_PUBLIC_SERVER_NAME: "${SPECKLE_PUBLIC_HOST}"
+      NUXT_PUBLIC_API_ORIGIN: "${SPECKLE_API_ORIGIN}"
+    depends_on:
+      - speckle-server
+    networks:
+      - speckle-net
+
+  speckle-fileimport-service:
+    image: speckle/speckle-fileimport-service:latest
+    restart: always
+    environment:
+      SERVER_URL: "http://speckle-server:3000"
+    depends_on:
+      - speckle-server
+    networks:
+      - speckle-net
+
+  speckle-preview-service:
+    image: speckle/speckle-preview-service:latest
+    restart: always
+    environment:
+      SERVER_URL: "http://speckle-server:3000"
+      REDIS_URL: "redis://redis"
+      PORT: "3001"
+    depends_on:
+      - speckle-server
+      - redis
+    networks:
+      - speckle-net
+
+  postgres:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_DB: speckle
+      POSTGRES_USER: speckle
+      POSTGRES_PASSWORD: "${SPECKLE_POSTGRES_PASSWORD}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - speckle-net
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - speckle-net
+
+  minio:
+    image: minio/minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9002:9001"
+    environment:
+      MINIO_ROOT_USER: "${SPECKLE_S3_ACCESS_KEY}"
+      MINIO_ROOT_PASSWORD: "${SPECKLE_S3_SECRET_KEY}"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - speckle-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  speckle-net:
+    driver: bridge

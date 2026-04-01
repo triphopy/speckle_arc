@@ -11,10 +11,16 @@ requires-python = ">=3.10"
 authors = [
   { name = "P_Kwan" }
 ]
-dependencies = []
+dependencies = [
+  "gql",
+  "paho-mqtt",
+  "python-dotenv",
+  "specklepy",
+]
 
 [project.scripts]
 speckle-arc = "speckle_arc.main:main"
+speckle-arc-mqtt = "speckle_arc.mqtt_to_speckle:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

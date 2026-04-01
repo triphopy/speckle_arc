@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT Architecture Diagram</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Thai:wght@300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0e1a;
+    font-family: 'IBM Plex Sans Thai', monospace;
+    color: #e0e8ff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    overflow-x: hidden;
+  }
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #4a9eff;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 300;
+    color: #c8d8ff;
+    margin-bottom: 48px;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .diagram {
+    width: 100%;
+    max-width: 960px;
+    position: relative;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .flow-line {
+    stroke-dasharray: 8 4;
+    animation: dash 1.5s linear infinite;
+  }
+  @keyframes dash {
+    to { stroke-dashoffset: -24; }
+  }
+  .flow-line-rev {
+    stroke-dasharray: 8 4;
+    animation: dash-rev 1.5s linear infinite;
+  }
+  @keyframes dash-rev {
+    to { stroke-dashoffset: 24; }
+  }
+  .pulse {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .legend {
+    margin-top: 40px;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #7a8ab0;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .legend-line {
+    width: 32px;
+    height: 2px;
+  }
+</style>
+</head>
+<body>
+
+<h1>System Architecture</h1>
+<h2>Home Assistant · Speckle · MQTT · IoT</h2>
+
+<div class="diagram">
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"></feGaussianBlur>
+      <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+    </filter>
+    <filter id="glow-strong">
+      <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+      <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+    </filter>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4a9eff"></path>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#36d68c"></path>
+    </marker>
+    <marker id="arrow-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#ff9a3c"></path>
+    </marker>
+    <marker id="arrow-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#b06eff"></path>
+    </marker>
+    <linearGradient id="bg-ha" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a2a4a"></stop>
+      <stop offset="100%" style="stop-color:#0f1a30"></stop>
+    </linearGradient>
+    <linearGradient id="bg-mqtt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a3a2a"></stop>
+      <stop offset="100%" style="stop-color:#0f2a1a"></stop>
+    </linearGradient>
+    <linearGradient id="bg-speckle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2a1a3a"></stop>
+      <stop offset="100%" style="stop-color:#1a0f2a"></stop>
+    </linearGradient>
+    <linearGradient id="bg-iot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a2a1a"></stop>
+      <stop offset="100%" style="stop-color:#2a1a0f"></stop>
+    </linearGradient>
+  </defs>
+
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2240" stroke-width="0.5"></path>
+  </pattern>
+  <rect width="960" height="620" fill="url(#grid)" opacity="0.5"></rect>
+
+  <rect x="20" y="80" width="130" height="70" rx="8" fill="url(#bg-iot)" stroke="#ff9a3c" stroke-width="1.5"></rect>
+  <text x="85" y="105" text-anchor="middle" fill="#ff9a3c" font-family="IBM Plex Mono" font-size="11" font-weight="600">ESP32</text>
+  <text x="85" y="122" text-anchor="middle" fill="#c0a070" font-family="IBM Plex Sans Thai" font-size="10">Temp / Humidity</text>
+  <text x="85" y="138" text-anchor="middle" fill="#806040" font-family="IBM Plex Mono" font-size="9">DHT22 Sensor</text>
+  <circle cx="138" cy="88" r="4" fill="#ff9a3c" class="pulse" filter="url(#glow)"></circle>
+
+  <rect x="20" y="185" width="130" height="70" rx="8" fill="url(#bg-iot)" stroke="#ff9a3c" stroke-width="1.5"></rect>
+  <text x="85" y="210" text-anchor="middle" fill="#ff9a3c" font-family="IBM Plex Mono" font-size="11" font-weight="600">ESP32</text>
+  <text x="85" y="227" text-anchor="middle" fill="#c0a070" font-family="IBM Plex Sans Thai" font-size="10">ประตู / หน้าต่าง</text>
+  <text x="85" y="243" text-anchor="middle" fill="#806040" font-family="IBM Plex Mono" font-size="9">Reed Switch</text>
+  <circle cx="138" cy="193" r="4" fill="#ff9a3c" class="pulse" filter="url(#glow)" style="animation-delay:0.5s"></circle>
+
+  <rect x="20" y="290" width="130" height="70" rx="8" fill="url(#bg-iot)" stroke="#ff9a3c" stroke-width="1.5"></rect>
+  <text x="85" y="315" text-anchor="middle" fill="#ff9a3c" font-family="IBM Plex Mono" font-size="11" font-weight="600">ESP8266</text>
+  <text x="85" y="332" text-anchor="middle" fill="#c0a070" font-family="IBM Plex Sans Thai" font-size="10">ไฟ / Relay</text>
+  <text x="85" y="348" text-anchor="middle" fill="#806040" font-family="IBM Plex Mono" font-size="9">Smart Plug</text>
+  <circle cx="138" cy="298" r="4" fill="#ff9a3c" class="pulse" filter="url(#glow)" style="animation-delay:1s"></circle>
+
+  <rect x="20" y="395" width="130" height="70" rx="8" fill="url(#bg-iot)" stroke="#ffc040" stroke-width="1.5" stroke-dasharray="5,3"></rect>
+  <text x="85" y="420" text-anchor="middle" fill="#ffc040" font-family="IBM Plex Mono" font-size="11" font-weight="600">Zigbee</text>
+  <text x="85" y="437" text-anchor="middle" fill="#c0a070" font-family="IBM Plex Sans Thai" font-size="10">Motion Sensor</text>
+  <text x="85" y="453" text-anchor="middle" fill="#806040" font-family="IBM Plex Mono" font-size="9">Aqara PIR</text>
+  <circle cx="138" cy="403" r="4" fill="#ffc040" class="pulse" filter="url(#glow)" style="animation-delay:1.5s"></circle>
+
+  <text x="85" y="510" text-anchor="middle" fill="#ff9a3c" font-family="IBM Plex Mono" font-size="10" opacity="0.6">IoT DEVICES</text>
+
+  <rect x="220" y="160" width="160" height="220" rx="12" fill="url(#bg-mqtt)" stroke="#36d68c" stroke-width="2" filter="url(#glow)"></rect>
+  <text x="300" y="192" text-anchor="middle" fill="#36d68c" font-family="IBM Plex Mono" font-size="13" font-weight="600">MQTT Broker</text>
+  <text x="300" y="210" text-anchor="middle" fill="#36d68c" font-family="IBM Plex Mono" font-size="10" opacity="0.7">Mosquitto add-on - 10.24.80.8</text>
+  <rect x="236" y="222" width="128" height="22" rx="4" fill="#0a1f10" stroke="#36d68c" stroke-width="0.8" opacity="0.7"></rect>
+  <text x="300" y="237" text-anchor="middle" fill="#7af0b0" font-family="IBM Plex Mono" font-size="9">home/sensor/temp</text>
+  <rect x="236" y="250" width="128" height="22" rx="4" fill="#0a1f10" stroke="#36d68c" stroke-width="0.8" opacity="0.7"></rect>
+  <text x="300" y="265" text-anchor="middle" fill="#7af0b0" font-family="IBM Plex Mono" font-size="9">home/door/status</text>
+  <rect x="236" y="278" width="128" height="22" rx="4" fill="#0a1f10" stroke="#36d68c" stroke-width="0.8" opacity="0.7"></rect>
+  <text x="300" y="293" text-anchor="middle" fill="#7af0b0" font-family="IBM Plex Mono" font-size="9">home/plug/state</text>
+  <rect x="236" y="306" width="128" height="22" rx="4" fill="#0a1f10" stroke="#36d68c" stroke-width="0.8" opacity="0.7"></rect>
+  <text x="300" y="321" text-anchor="middle" fill="#7af0b0" font-family="IBM Plex Mono" font-size="9">home/+/command</text>
+  <text x="300" y="358" text-anchor="middle" fill="#36d68c" font-family="IBM Plex Mono" font-size="9" opacity="0.5">port: 1883</text>
+  <text x="300" y="372" text-anchor="middle" fill="#36d68c" font-family="IBM Plex Mono" font-size="9" opacity="0.5">broker endpoint exposed by Home Assistant</text>
+  <text x="300" y="430" text-anchor="middle" fill="#36d68c" font-family="IBM Plex Mono" font-size="10" opacity="0.6">MQTT BROKER</text>
+
+  <rect x="450" y="100" width="200" height="300" rx="12" fill="url(#bg-ha)" stroke="#4a9eff" stroke-width="2.5" filter="url(#glow-strong)"></rect>
+  <circle cx="550" cy="145" r="24" fill="none" stroke="#4a9eff" stroke-width="2" opacity="0.4"></circle>
+  <text x="550" y="152" text-anchor="middle" fill="#4a9eff" font-family="IBM Plex Mono" font-size="18">HA</text>
+  <text x="550" y="182" text-anchor="middle" fill="#4a9eff" font-family="IBM Plex Mono" font-size="14" font-weight="600">Home Assistant</text>
+  <text x="550" y="198" text-anchor="middle" fill="#4a9eff" font-family="IBM Plex Mono" font-size="9" opacity="0.6">10.24.80.8 - port 8123</text>
+  <rect x="466" y="212" width="168" height="24" rx="4" fill="#0f1e3a" stroke="#4a9eff" stroke-width="0.8"></rect>
+  <text x="550" y="228" text-anchor="middle" fill="#8ab8ff" font-family="IBM Plex Sans Thai" font-size="10">MQTT Integration</text>
+  <rect x="466" y="242" width="168" height="24" rx="4" fill="#0f1e3a" stroke="#4a9eff" stroke-width="0.8"></rect>
+  <text x="550" y="258" text-anchor="middle" fill="#8ab8ff" font-family="IBM Plex Sans Thai" font-size="10">Zigbee2MQTT / ZHA</text>
+  <rect x="466" y="272" width="168" height="24" rx="4" fill="#0f1e3a" stroke="#4a9eff" stroke-width="0.8"></rect>
+  <text x="550" y="288" text-anchor="middle" fill="#8ab8ff" font-family="IBM Plex Sans Thai" font-size="10">Automations / Scripts</text>
+  <rect x="466" y="302" width="168" height="24" rx="4" fill="#0f1e3a" stroke="#4a9eff" stroke-width="0.8"></rect>
+  <text x="550" y="318" text-anchor="middle" fill="#8ab8ff" font-family="IBM Plex Sans Thai" font-size="10">Dashboard (Lovelace)</text>
+  <rect x="466" y="332" width="168" height="24" rx="4" fill="#0f1e3a" stroke="#4a9eff" stroke-width="0.8"></rect>
+  <text x="550" y="348" text-anchor="middle" fill="#8ab8ff" font-family="IBM Plex Sans Thai" font-size="10">Speckle Integration</text>
+  <text x="550" y="430" text-anchor="middle" fill="#4a9eff" font-family="IBM Plex Mono" font-size="10" opacity="0.6">HOME ASSISTANT</text>
+
+  <rect x="720" y="140" width="200" height="220" rx="12" fill="url(#bg-speckle)" stroke="#b06eff" stroke-width="2" filter="url(#glow)"></rect>
+  <text x="820" y="172" text-anchor="middle" fill="#b06eff" font-family="IBM Plex Mono" font-size="14" font-weight="600">Speckle</text>
+  <text x="820" y="190" text-anchor="middle" fill="#b06eff" font-family="IBM Plex Mono" font-size="9" opacity="0.6">BIM / 3D Data Platform</text>
+  <rect x="736" y="202" width="168" height="24" rx="4" fill="#1a0f2a" stroke="#b06eff" stroke-width="0.8"></rect>
+  <text x="820" y="218" text-anchor="middle" fill="#d0a0ff" font-family="IBM Plex Sans Thai" font-size="10">3D Building Model</text>
+  <rect x="736" y="232" width="168" height="24" rx="4" fill="#1a0f2a" stroke="#b06eff" stroke-width="0.8"></rect>
+  <text x="820" y="248" text-anchor="middle" fill="#d0a0ff" font-family="IBM Plex Sans Thai" font-size="10">Room / Space Data</text>
+  <rect x="736" y="262" width="168" height="24" rx="4" fill="#1a0f2a" stroke="#b06eff" stroke-width="0.8"></rect>
+  <text x="820" y="278" text-anchor="middle" fill="#d0a0ff" font-family="IBM Plex Sans Thai" font-size="10">Sensor Location Mapping</text>
+  <rect x="736" y="292" width="168" height="24" rx="4" fill="#1a0f2a" stroke="#b06eff" stroke-width="0.8"></rect>
+  <text x="820" y="308" text-anchor="middle" fill="#d0a0ff" font-family="IBM Plex Sans Thai" font-size="10">Real-time Visualization</text>
+  <text x="820" y="345" text-anchor="middle" fill="#b06eff" font-family="IBM Plex Mono" font-size="9" opacity="0.5">10.24.110.17 - on-premise server</text>
+  <text x="820" y="400" text-anchor="middle" fill="#b06eff" font-family="IBM Plex Mono" font-size="10" opacity="0.6">SPECKLE PLATFORM</text>
+
+  <rect x="700" y="392" width="220" height="74" rx="10" fill="#101828" stroke="#7cc8ff" stroke-width="1.5" stroke-dasharray="6,4"></rect>
+  <text x="810" y="418" text-anchor="middle" fill="#7cc8ff" font-family="IBM Plex Mono" font-size="12" font-weight="600">Python Bridge</text>
+  <text x="810" y="436" text-anchor="middle" fill="#9fd7ff" font-family="IBM Plex Mono" font-size="9">mqtt_to_speckle.py</text>
+  <text x="810" y="452" text-anchor="middle" fill="#6f8fb8" font-family="IBM Plex Mono" font-size="9">subscribes to MQTT broker on Home Assistant side</text>
+
+  <rect x="380" y="510" width="340" height="70" rx="10" fill="#0f1525" stroke="#4a9eff" stroke-width="1.5" stroke-dasharray="6,3"></rect>
+  <text x="550" y="538" text-anchor="middle" fill="#8ab8ff" font-family="IBM Plex Sans Thai" font-size="12">ผู้ใช้งาน / Dashboard</text>
+  <text x="550" y="558" text-anchor="middle" fill="#506080" font-family="IBM Plex Mono" font-size="9">Browser · Mobile App · Home Assistant UI</text>
+  <text x="550" y="573" text-anchor="middle" fill="#506080" font-family="IBM Plex Mono" font-size="9">Speckle Viewer · HA Lovelace</text>
+
+  <path d="M 150,115 Q 185,115 220,220" fill="none" stroke="#ff9a3c" stroke-width="1.5" marker-end="url(#arrow-orange)" class="flow-line"></path>
+  <path d="M 150,220 L 220,250" fill="none" stroke="#ff9a3c" stroke-width="1.5" marker-end="url(#arrow-orange)" class="flow-line"></path>
+  <path d="M 150,325 Q 185,325 220,310" fill="none" stroke="#ff9a3c" stroke-width="1.5" marker-end="url(#arrow-orange)" class="flow-line"></path>
+  <text x="175" y="205" fill="#ff9a3c" font-family="IBM Plex Mono" font-size="9" opacity="0.8">PUBLISH</text>
+
+  <path d="M 380,230 L 450,230" fill="none" stroke="#36d68c" stroke-width="2" marker-end="url(#arrow-blue)" class="flow-line"></path>
+  <path d="M 450,280 L 380,280" fill="none" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrow-green)" class="flow-line-rev"></path>
+  <text x="395" y="222" fill="#36d68c" font-family="IBM Plex Mono" font-size="8.5">SUBSCRIBE</text>
+  <text x="395" y="295" fill="#4a9eff" font-family="IBM Plex Mono" font-size="8.5">COMMAND</text>
+
+  <path d="M 650,250 L 720,250" fill="none" stroke="#b06eff" stroke-width="2" marker-end="url(#arrow-purple)" class="flow-line"></path>
+  <path d="M 720,290 L 650,290" fill="none" stroke="#b06eff" stroke-width="1.5" marker-end="url(#arrow-blue)" class="flow-line-rev" stroke-dasharray="5,5"></path>
+  <text x="658" y="242" fill="#b06eff" font-family="IBM Plex Mono" font-size="8.5">PUSH DATA</text>
+  <text x="658" y="306" fill="#8060c0" font-family="IBM Plex Mono" font-size="8.5">MODEL REF</text>
+
+  <path d="M 380,340 C 500,390 610,418 700,430" fill="none" stroke="#7cc8ff" stroke-width="1.5" marker-end="url(#arrow-blue)" stroke-dasharray="5,4"></path>
+  <text x="505" y="392" fill="#7cc8ff" font-family="IBM Plex Mono" font-size="8.5" opacity="0.85">OPTIONAL DIRECT PATH</text>
+  <path d="M 820,392 L 820,360" fill="none" stroke="#7cc8ff" stroke-width="1.5" marker-end="url(#arrow-purple)" stroke-dasharray="5,4"></path>
+
+  <path d="M 150,430 Q 300,430 350,430 Q 420,430 450,370" fill="none" stroke="#ffc040" stroke-width="1.5" marker-end="url(#arrow-blue)" class="flow-line" stroke-dasharray="4,4"></path>
+  <text x="300" y="450" fill="#ffc040" font-family="IBM Plex Mono" font-size="9" opacity="0.8">Zigbee2MQTT</text>
+
+  <path d="M 550,400 L 550,510" fill="none" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrow-blue)" class="flow-line"></path>
+  <path d="M 530,510 L 530,400" fill="none" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arrow-blue)" class="flow-line-rev"></path>
+  <path d="M 820,466 Q 820,520 720,548" fill="none" stroke="#b06eff" stroke-width="1.5" marker-end="url(#arrow-purple)" class="flow-line" stroke-dasharray="5,4"></path>
+  <text x="790" y="490" fill="#b06eff" font-family="IBM Plex Mono" font-size="9" opacity="0.7">3D View</text>
+
+  <rect x="10" y="55" width="155" height="18" rx="3" fill="#ff9a3c" fill-opacity="0.15" stroke="#ff9a3c" stroke-width="0.5"></rect>
+  <text x="87" y="68" text-anchor="middle" fill="#ff9a3c" font-family="IBM Plex Mono" font-size="9" letter-spacing="2">LOCAL NETWORK</text>
+  <rect x="212" y="140" width="176" height="18" rx="3" fill="#36d68c" fill-opacity="0.1" stroke="#36d68c" stroke-width="0.5"></rect>
+  <text x="300" y="153" text-anchor="middle" fill="#36d68c" font-family="IBM Plex Mono" font-size="9" letter-spacing="2">MQTT LAYER</text>
+  <rect x="442" y="78" width="216" height="18" rx="3" fill="#4a9eff" fill-opacity="0.1" stroke="#4a9eff" stroke-width="0.5"></rect>
+  <text x="550" y="91" text-anchor="middle" fill="#4a9eff" font-family="IBM Plex Mono" font-size="9" letter-spacing="2">HOME ASSISTANT</text>
+  <rect x="712" y="118" width="216" height="18" rx="3" fill="#b06eff" fill-opacity="0.1" stroke="#b06eff" stroke-width="0.5"></rect>
+  <text x="820" y="131" text-anchor="middle" fill="#b06eff" font-family="IBM Plex Mono" font-size="9" letter-spacing="2">ON-PREMISE SPECKLE</text>
+</svg>
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-line" style="background:#ff9a3c"></div>
+    <span>MQTT Publish (IoT -&gt; Broker)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:#36d68c"></div>
+    <span>MQTT Subscribe (Broker -&gt; HA)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:#4a9eff"></div>
+    <span>Command / Control</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:#b06eff"></div>
+    <span>Speckle API / 3D Data</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:#7cc8ff"></div>
+    <span>Optional Python bridge path</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:#ffc040; opacity:0.7"></div>
+    <span>Zigbee Protocol</span>
+  </div>
+</div>
+
+</body>
+</html>
