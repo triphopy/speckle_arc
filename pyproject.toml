@@ -20,6 +20,7 @@ dependencies = [
 
 [project.scripts]
 speckle-arc-mqtt = "speckle_arc.mqtt_to_speckle:main"
+speckle-arc-latest = "speckle_arc.speckle_latest:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

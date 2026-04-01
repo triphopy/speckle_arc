@@ -72,10 +72,17 @@ MQTT to Speckle bridge:
 speckle-arc-mqtt
 ```
 
+Read the latest value from Speckle:
+
+```powershell
+speckle-arc-latest
+```
+
 You can also run modules directly:
 
 ```powershell
 python -m speckle_arc.mqtt_to_speckle
+python -m speckle_arc.speckle_latest
 ```
 
 ## Docker deployment
