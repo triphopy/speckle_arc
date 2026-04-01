@@ -8,9 +8,9 @@ The current project flow is:
 
 ```text
 IoT Devices
-  -> MQTT Broker (Mosquitto add-on on Home Assistant, 10.24.80.8)
+  -> MQTT Broker (Mosquitto add-on on Home Assistant)
   -> Home Assistant integrations
-  -> Speckle (10.24.110.17)
+  -> Speckle
 ```
 
 Authoritative reference:
@@ -19,10 +19,10 @@ Authoritative reference:
 
 Deployment roles:
 
-- `10.24.80.8` is the Home Assistant side of the system, including the MQTT broker endpoint and related device flows
-- `10.24.110.17` hosts the Speckle Docker stack
+- `Home Assistant host` is the Home Assistant side of the system, including the MQTT broker endpoint and related device flows
+- `Speckle host` runs the Speckle Docker stack
 
-This guide focuses on the Ubuntu server at `10.24.110.17`.
+This guide focuses on the Ubuntu server that runs Speckle.
 
 ## 1. Server prerequisites
 
@@ -138,7 +138,7 @@ docker compose logs -f speckle-frontend
 
 The architecture diagram shows Home Assistant as the main component that connects MQTT data into Speckle.
 
-This repository also contains an optional Python bridge at [mqtt_to_speckle.py](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/src/speckle_arc/mqtt_to_speckle.py). Use it only if you want a direct MQTT-to-Speckle path outside the Home Assistant integration flow. In that setup, the bridge subscribes to the MQTT broker endpoint exposed from the Home Assistant side at `10.24.80.8`.
+This repository also contains an optional Python bridge at [mqtt_to_speckle.py](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/src/speckle_arc/mqtt_to_speckle.py). Use it only if you want a direct MQTT-to-Speckle path outside the Home Assistant integration flow. In that setup, the bridge subscribes to the MQTT broker endpoint exposed from the Home Assistant side.
 
 Install Python dependencies:
 
@@ -165,7 +165,7 @@ python -m speckle_arc.mqtt_to_speckle
 
 Before starting the bridge, confirm `.env` contains the MQTT settings for the Home Assistant broker:
 
-- `MQTT_BROKER=10.24.80.8`
+- `MQTT_BROKER=your-home-assistant-mqtt-host`
 - `MQTT_PORT=1883`
 - `MQTT_USERNAME`
 - `MQTT_PASSWORD`
@@ -218,17 +218,17 @@ Check these endpoints from the server or another machine on the network:
 - MinIO API: `http://YOUR_HOST:9000`
 - MinIO console: `http://YOUR_HOST:9002`
 
-If you used the values currently shown in `.env`, that would be:
+If you use your own host values in `.env`, verify the corresponding endpoints:
 
-- `http://10.24.110.17:8080`
-- `http://10.24.110.17:3000`
-- `http://10.24.110.17:9000`
-- `http://10.24.110.17:9002`
+- `http://your-speckle-host:8080`
+- `http://your-speckle-host:3000`
+- `http://your-speckle-host:9000`
+- `http://your-speckle-host:9002`
 
 Also verify the bridge process:
 
-- If you are using the optional Python bridge, it can connect to MQTT at `10.24.80.8`
-- If you are using the optional Python bridge, it can create versions in Speckle at `10.24.110.17`
+- If you are using the optional Python bridge, it can connect to your MQTT broker host
+- If you are using the optional Python bridge, it can create versions in Speckle on your Speckle host
 - If you are not using the Python bridge, verify the Home Assistant to Speckle integration path instead
 
 ## 8. Common operations
@@ -288,7 +288,7 @@ sudo ufw allow 9002/tcp
 
 Only expose MinIO ports if you actually need direct access to them.
 
-If you use the optional Python bridge, also confirm the Ubuntu server can reach `10.24.80.8:1883`.
+If you use the optional Python bridge, also confirm the Ubuntu server can reach your MQTT broker host on port `1883`.
 
 ## 11. Production recommendations
 

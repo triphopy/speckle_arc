@@ -8,9 +8,9 @@ Current system flow:
 
 ```text
 IoT Devices
-  -> MQTT Broker (Mosquitto add-on on Home Assistant, 10.24.80.8)
+  -> MQTT Broker (Mosquitto add-on on Home Assistant)
   -> Home Assistant integrations
-  -> Speckle (10.24.110.17)
+  -> Speckle
 ```
 
 Authoritative reference:
@@ -20,7 +20,7 @@ Authoritative reference:
 According to that diagram:
 
 - IoT devices publish data to MQTT
-- The MQTT broker is part of the Home Assistant side of the system at `10.24.80.8`
+- The MQTT broker is part of the Home Assistant side of the system
 - Home Assistant subscribes to MQTT and can also send commands back
 - Zigbee devices may flow into Home Assistant directly through Zigbee2MQTT or ZHA
 - Home Assistant pushes data to Speckle through a Speckle integration
@@ -28,7 +28,7 @@ According to that diagram:
 
 In this repository:
 
-- [docker-compose.yml](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/docker-compose.yml) provides the Speckle deployment on `10.24.110.17`
+- [docker-compose.yml](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/docker-compose.yml) provides the Speckle deployment
 - [src/speckle_arc/mqtt_to_speckle.py](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/src/speckle_arc/mqtt_to_speckle.py) is an optional Python bridge that subscribes directly to the MQTT broker endpoint exposed from the Home Assistant side
 
 ## Project structure
@@ -105,8 +105,8 @@ If you want the optional MQTT bridge to start automatically on Ubuntu boot, use 
 
 ## Deployment roles
 
-- `10.24.80.8`: Home Assistant stack, including MQTT broker access and integrations
-- `10.24.110.17`: Speckle services
+- `Home Assistant host`: MQTT broker access and integrations
+- `Speckle host`: Speckle services
 
 ## Notes
 
