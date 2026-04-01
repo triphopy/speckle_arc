@@ -109,39 +109,25 @@ class MqttToSpeckleBridge:
         obj_id = send(obj, [self.transport])
         message = f"IoT: {topic}"
         query = gql(
-            """
-            mutation CreateVersion(
-              $objectId: String!,
-              $modelId: String!,
-              $projectId: String!,
-              $message: String!
-            ) {
-              versionMutations {
+            f"""
+            mutation {{
+              versionMutations {{
                 create(
-                  input: {
-                    objectId: $objectId,
-                    modelId: $modelId,
-                    projectId: $projectId,
-                    message: $message
-                  }
-                ) {
+                  input: {{
+                    objectId: {json.dumps(obj_id)},
+                    modelId: {json.dumps(self.settings.speckle_model_id)},
+                    projectId: {json.dumps(self.settings.speckle_project_id)},
+                    message: {json.dumps(message)}
+                  }}
+                ) {{
                   id
                   message
-                }
-              }
-            }
+                }}
+              }}
+            }}
             """
         )
-
-        result = self.speckle_client.execute_query(
-            query,
-            variable_values={
-                "objectId": obj_id,
-                "modelId": self.settings.speckle_model_id,
-                "projectId": self.settings.speckle_project_id,
-                "message": message,
-            },
-        )
+        result = self.speckle_client.execute_query(query)
         version = result["versionMutations"]["create"]
         LOGGER.info("Sent topic '%s' to Speckle version %s", topic, version["id"])
 
