@@ -66,7 +66,10 @@ def _get_value(value: Any, key: str) -> Any:
         return value.get(key)
     if hasattr(value, key):
         return getattr(value, key)
-    return value[key] if key in value else None
+    try:
+        return value[key]
+    except (KeyError, TypeError, AttributeError):
+        return None
 
 
 def _print_version(root: Any, latest: dict[str, Any]) -> None:
