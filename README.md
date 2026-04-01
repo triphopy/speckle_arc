@@ -64,6 +64,13 @@ python -m pip install -e .
 Copy-Item .env.example .env
 ```
 
+For long-lived server deployments, you can also keep the real env file outside the repo.
+The CLI tools will try these locations in order:
+
+- `SPECKLE_ARC_ENV_FILE`
+- `.env` in the project root
+- `/home/system/.config/speckle-stack.env`
+
 ## Run
 
 MQTT to Speckle bridge:

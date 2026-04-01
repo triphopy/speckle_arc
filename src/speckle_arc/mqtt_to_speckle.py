@@ -21,7 +21,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 def load_environment() -> None:
-    load_dotenv()
+    env_candidates = [
+        os.getenv("SPECKLE_ARC_ENV_FILE"),
+        ".env",
+        "/home/system/.config/speckle-stack.env",
+    ]
+    for env_path in env_candidates:
+        if env_path and os.path.exists(env_path):
+            load_dotenv(env_path, override=False)
+            return
 
 
 def _read_bool_env(name: str, default: bool) -> bool:
