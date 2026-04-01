@@ -85,12 +85,21 @@ Read the latest value from Speckle:
 speckle-arc-latest
 ```
 
+Read multiple recent values from Speckle:
+
+```powershell
+speckle-arc-recent 5
+```
+
 You can also run modules directly:
 
 ```powershell
 python -m speckle_arc.mqtt_to_speckle
 python -m speckle_arc.speckle_latest
 ```
+
+The CLI tools print timestamps in the local timezone from `SPECKLE_ARC_TIMEZONE`.
+If not set, they default to `Asia/Bangkok`.
 
 ## Docker deployment
 

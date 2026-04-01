@@ -3,8 +3,10 @@ import logging
 import os
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from json import JSONDecodeError
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import paho.mqtt.client as mqtt
 from gql import gql
@@ -37,6 +39,37 @@ def _read_bool_env(name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def get_local_timezone() -> ZoneInfo:
+    return ZoneInfo(os.getenv("SPECKLE_ARC_TIMEZONE", "Asia/Bangkok"))
+
+
+def format_timestamp_local(timestamp: Any) -> str:
+    if not isinstance(timestamp, (int, float)):
+        return str(timestamp)
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(
+        get_local_timezone()
+    ).isoformat()
+
+
+def parse_topic_metadata(topic: str) -> dict[str, Any]:
+    parts = topic.split("/")
+    device_id = parts[0] if parts else ""
+    sensor_type = parts[2] if len(parts) >= 3 else ""
+    unit_map = {
+        "temperature": "C",
+        "humidity": "%",
+        "pm1_0": "ug/m3",
+        "pm25": "ug/m3",
+        "pm10": "ug/m3",
+    }
+    return {
+        "raw_topic": topic,
+        "device_id": device_id,
+        "sensor_type": sensor_type,
+        "unit": unit_map.get(sensor_type),
+    }
 
 
 def _read_topics() -> list[str]:
@@ -110,9 +143,15 @@ class MqttToSpeckleBridge:
 
     def send_to_speckle(self, topic: str, payload: Any) -> None:
         obj = Base()
+        metadata = parse_topic_metadata(topic)
         obj["topic"] = topic
+        obj["raw_topic"] = metadata["raw_topic"]
+        obj["device_id"] = metadata["device_id"]
+        obj["sensor_type"] = metadata["sensor_type"]
+        obj["unit"] = metadata["unit"]
         obj["payload"] = payload if isinstance(payload, dict) else {"value": payload}
         obj["timestamp"] = time.time()
+        obj["timestamp_local"] = format_timestamp_local(obj["timestamp"])
 
         obj_id = send(obj, [self.transport])
         message = f"IoT: {topic}"
