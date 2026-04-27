@@ -144,6 +144,29 @@ python -m speckle_arc.speckle_latest
 The CLI tools print timestamps in the local timezone from `SPECKLE_ARC_TIMEZONE`.
 If not set, they default to `Asia/Bangkok`.
 
+### Rate limiting sensor updates
+
+To avoid creating a new Speckle version for every MQTT message, the bridge supports
+three environment variables:
+
+- `SPECKLE_MIN_SEND_INTERVAL_SECONDS`: minimum seconds between sends for the same topic
+- `SPECKLE_SKIP_DUPLICATE_PAYLOADS`: skip unchanged payloads
+- `SPECKLE_SENSOR_THRESHOLDS`: send immediately when a numeric value changes by at least the configured amount for that sensor type
+
+Example:
+
+```powershell
+SPECKLE_MIN_SEND_INTERVAL_SECONDS=60
+SPECKLE_SKIP_DUPLICATE_PAYLOADS=true
+SPECKLE_SENSOR_THRESHOLDS=temperature=0.5,humidity=2,pm25=5
+```
+
+With that example, the bridge will:
+
+- skip duplicate payloads
+- send at most once every 60 seconds per MQTT topic
+- still send immediately if temperature changes by `0.5`, humidity by `2`, or PM2.5 by `5`
+
 ## Docker deployment
 
 The repository now includes [docker-compose.yml](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/docker-compose.yml) for running Speckle services on an Ubuntu server with Docker Compose.

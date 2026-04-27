@@ -41,6 +41,13 @@ def _read_bool_env(name: str, default: bool) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _read_float_env(name: str, default: float) -> float:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return float(value)
+
+
 def get_local_timezone() -> ZoneInfo:
     return ZoneInfo(os.getenv("SPECKLE_ARC_TIMEZONE", "Asia/Bangkok"))
 
@@ -72,6 +79,51 @@ def parse_topic_metadata(topic: str) -> dict[str, Any]:
     }
 
 
+def _read_sensor_thresholds() -> dict[str, float]:
+    raw_thresholds = os.getenv("SPECKLE_SENSOR_THRESHOLDS", "")
+    thresholds: dict[str, float] = {}
+    for item in raw_thresholds.split(","):
+        entry = item.strip()
+        if not entry:
+            continue
+        if "=" not in entry:
+            raise ValueError(
+                "SPECKLE_SENSOR_THRESHOLDS entries must look like "
+                "'temperature=0.5,humidity=2'"
+            )
+        sensor_type, raw_value = entry.split("=", 1)
+        thresholds[sensor_type.strip()] = float(raw_value.strip())
+    return thresholds
+
+
+def _extract_numeric_value(payload: Any) -> float | None:
+    if isinstance(payload, (int, float)) and not isinstance(payload, bool):
+        return float(payload)
+    if isinstance(payload, dict):
+        for key in ("value", "state", "reading"):
+            value = payload.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                return float(value)
+            if isinstance(value, str):
+                try:
+                    return float(value)
+                except ValueError:
+                    continue
+    if isinstance(payload, str):
+        try:
+            return float(payload)
+        except ValueError:
+            return None
+    return None
+
+
+def _payload_signature(payload: Any) -> str:
+    try:
+        return json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    except TypeError:
+        return str(payload)
+
+
 def _read_topics() -> list[str]:
     raw_topics = os.getenv("MQTT_TOPICS")
     if not raw_topics:
@@ -96,6 +148,9 @@ class Settings:
     mqtt_password: str | None
     mqtt_topics: list[str]
     mqtt_keepalive: int = 60
+    min_send_interval_seconds: float = 0.0
+    skip_duplicate_payloads: bool = True
+    sensor_thresholds: dict[str, float] | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -125,6 +180,13 @@ class Settings:
             mqtt_password=os.getenv("MQTT_PASSWORD"),
             mqtt_topics=_read_topics(),
             mqtt_keepalive=int(os.getenv("MQTT_KEEPALIVE", "60")),
+            min_send_interval_seconds=_read_float_env(
+                "SPECKLE_MIN_SEND_INTERVAL_SECONDS", 0.0
+            ),
+            skip_duplicate_payloads=_read_bool_env(
+                "SPECKLE_SKIP_DUPLICATE_PAYLOADS", default=True
+            ),
+            sensor_thresholds=_read_sensor_thresholds(),
         )
 
 
@@ -140,6 +202,55 @@ class MqttToSpeckleBridge:
             client=self.speckle_client,
             stream_id=settings.speckle_project_id,
         )
+        self.last_sent_at_by_topic: dict[str, float] = {}
+        self.last_payload_signature_by_topic: dict[str, str] = {}
+        self.last_numeric_value_by_topic: dict[str, float] = {}
+
+    def should_send(self, topic: str, payload: Any) -> tuple[bool, str]:
+        now = time.time()
+        elapsed = now - self.last_sent_at_by_topic.get(topic, 0.0)
+        payload_signature = _payload_signature(payload)
+        previous_signature = self.last_payload_signature_by_topic.get(topic)
+        metadata = parse_topic_metadata(topic)
+        sensor_type = metadata["sensor_type"]
+        numeric_value = _extract_numeric_value(payload)
+        previous_numeric = self.last_numeric_value_by_topic.get(topic)
+        threshold = (self.settings.sensor_thresholds or {}).get(sensor_type)
+
+        if topic not in self.last_sent_at_by_topic:
+            return True, "first message for topic"
+
+        if (
+            threshold is not None
+            and numeric_value is not None
+            and previous_numeric is not None
+            and abs(numeric_value - previous_numeric) >= threshold
+        ):
+            return True, f"value changed by threshold >= {threshold}"
+
+        if (
+            self.settings.skip_duplicate_payloads
+            and previous_signature == payload_signature
+        ):
+            if self.settings.min_send_interval_seconds <= 0:
+                return False, "duplicate payload"
+            if elapsed < self.settings.min_send_interval_seconds:
+                return False, "duplicate payload inside minimum interval"
+
+        if (
+            self.settings.min_send_interval_seconds > 0
+            and elapsed < self.settings.min_send_interval_seconds
+        ):
+            return False, "inside minimum interval"
+
+        return True, "minimum interval elapsed"
+
+    def remember_sent_payload(self, topic: str, payload: Any) -> None:
+        self.last_sent_at_by_topic[topic] = time.time()
+        self.last_payload_signature_by_topic[topic] = _payload_signature(payload)
+        numeric_value = _extract_numeric_value(payload)
+        if numeric_value is not None:
+            self.last_numeric_value_by_topic[topic] = numeric_value
 
     def send_to_speckle(self, topic: str, payload: Any) -> None:
         obj = Base()
@@ -176,6 +287,7 @@ class MqttToSpeckleBridge:
         )
         result = self.speckle_client.execute_query(query)
         version = result["versionMutations"]["create"]
+        self.remember_sent_payload(topic, payload)
         LOGGER.info("Sent topic '%s' to Speckle version %s", topic, version["id"])
 
     def on_connect(self, client: mqtt.Client, userdata: Any, flags: Any, reason_code: Any, properties: Any) -> None:
@@ -194,7 +306,12 @@ class MqttToSpeckleBridge:
 
         LOGGER.info("Received message on '%s': %s", topic, payload)
         try:
+            should_send, reason = self.should_send(topic, payload)
+            if not should_send:
+                LOGGER.info("Skipped topic '%s': %s", topic, reason)
+                return
             self.send_to_speckle(topic, payload)
+            LOGGER.info("Forwarded topic '%s': %s", topic, reason)
         except Exception:
             LOGGER.exception("Failed to forward topic '%s' to Speckle", topic)
 
