@@ -167,6 +167,51 @@ With that example, the bridge will:
 - send at most once every 60 seconds per MQTT topic
 - still send immediately if temperature changes by `0.5`, humidity by `2`, or PM2.5 by `5`
 
+### Sensor-to-room mapping
+
+To attach telemetry to a room or model element, point the bridge at a JSON mapping file:
+
+```powershell
+SPECKLE_SENSOR_MAP_FILE=config/sensor_room_map.json
+```
+
+Use [config/sensor_room_map.example.json](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/config/sensor_room_map.example.json) as the starting point, then copy it to `config/sensor_room_map.json`.
+
+Each entry should include:
+
+- `sensor_id`
+- `building_id`
+- `level_id`
+- `room_id`
+- `speckle_element_id`
+
+Recommended extra field:
+
+- `application_id`: the source application element id shown in Speckle, which is usually more stable across model reimports than the Speckle object `id`
+- `anchor_type`: what the sensor is attached to in the model, for example `floor`, `door`, `wall`, or `room`
+- `anchor_category`: the model category, for example `Floors`, `Doors`, or `Walls`
+
+You can match on either:
+
+- `topic`: exact MQTT topic match
+- or `device_id` + `sensor_type`
+
+When a mapping entry is found, the bridge adds these fields to the Speckle object:
+
+- `sensor_id`
+- `building_id`
+- `level_id`
+- `room_id`
+- `room_name`
+- `zone_id`
+- `zone_name`
+- `anchor_type`
+- `anchor_category`
+- `speckle_element_id`
+- `application_id`
+- `speckle_model_id`
+- `tags`
+
 ## Docker deployment
 
 The repository now includes [docker-compose.yml](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/docker-compose.yml) for running Speckle services on an Ubuntu server with Docker Compose.

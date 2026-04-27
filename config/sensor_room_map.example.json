@@ -1,0 +1,38 @@
+[
+  {
+    "topic": "site1/sensor/temperature/state",
+    "sensor_id": "temp-L02-205-01",
+    "sensor_type": "temperature",
+    "device_id": "site1",
+    "building_id": "tower-a",
+    "level_id": "L02",
+    "room_id": "L02-205",
+    "room_name": "Meeting Room 205",
+    "zone_id": "office-east",
+    "zone_name": "Office East",
+    "anchor_type": "floor",
+    "anchor_category": "Floors",
+    "speckle_model_id": "b3481ff845",
+    "speckle_element_id": "replace-with-speckle-room-object-id",
+    "application_id": "replace-with-source-application-id",
+    "tags": ["office", "indoor", "hvac"]
+  },
+  {
+    "topic": "site1/sensor/humidity/state",
+    "sensor_id": "hum-L02-205-01",
+    "sensor_type": "humidity",
+    "device_id": "site1",
+    "building_id": "tower-a",
+    "level_id": "L02",
+    "room_id": "L02-205",
+    "room_name": "Meeting Room 205",
+    "zone_id": "office-east",
+    "zone_name": "Office East",
+    "anchor_type": "floor",
+    "anchor_category": "Floors",
+    "speckle_model_id": "b3481ff845",
+    "speckle_element_id": "replace-with-speckle-room-object-id",
+    "application_id": "replace-with-source-application-id",
+    "tags": ["office", "indoor", "hvac"]
+  }
+]

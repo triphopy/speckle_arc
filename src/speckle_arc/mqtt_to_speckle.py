@@ -124,6 +124,75 @@ def _payload_signature(payload: Any) -> str:
         return str(payload)
 
 
+def _read_json_file(path: str) -> Any:
+    with open(path, encoding="utf-8") as file:
+        return json.load(file)
+
+
+@dataclass(slots=True)
+class SensorMapEntry:
+    sensor_id: str
+    room_id: str
+    level_id: str
+    building_id: str
+    speckle_element_id: str
+    anchor_type: str | None = None
+    anchor_category: str | None = None
+    application_id: str | None = None
+    speckle_model_id: str | None = None
+    topic: str | None = None
+    device_id: str | None = None
+    sensor_type: str | None = None
+    room_name: str | None = None
+    zone_id: str | None = None
+    zone_name: str | None = None
+    tags: list[str] | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SensorMapEntry":
+        required = [
+            "sensor_id",
+            "room_id",
+            "level_id",
+            "building_id",
+            "speckle_element_id",
+        ]
+        missing = [key for key in required if not data.get(key)]
+        if missing:
+            raise ValueError(
+                "Sensor map entry is missing required keys: "
+                + ", ".join(sorted(missing))
+            )
+        return cls(
+            sensor_id=str(data["sensor_id"]),
+            room_id=str(data["room_id"]),
+            level_id=str(data["level_id"]),
+            building_id=str(data["building_id"]),
+            speckle_element_id=str(data["speckle_element_id"]),
+            anchor_type=data.get("anchor_type"),
+            anchor_category=data.get("anchor_category"),
+            application_id=data.get("application_id"),
+            speckle_model_id=data.get("speckle_model_id"),
+            topic=data.get("topic"),
+            device_id=data.get("device_id"),
+            sensor_type=data.get("sensor_type"),
+            room_name=data.get("room_name"),
+            zone_id=data.get("zone_id"),
+            zone_name=data.get("zone_name"),
+            tags=list(data["tags"]) if isinstance(data.get("tags"), list) else None,
+        )
+
+
+def _read_sensor_map_entries() -> list[SensorMapEntry]:
+    map_file = os.getenv("SPECKLE_SENSOR_MAP_FILE")
+    if not map_file:
+        return []
+    raw_entries = _read_json_file(map_file)
+    if not isinstance(raw_entries, list):
+        raise ValueError("SPECKLE_SENSOR_MAP_FILE must contain a JSON array.")
+    return [SensorMapEntry.from_dict(entry) for entry in raw_entries]
+
+
 def _read_topics() -> list[str]:
     raw_topics = os.getenv("MQTT_TOPICS")
     if not raw_topics:
@@ -151,6 +220,7 @@ class Settings:
     min_send_interval_seconds: float = 0.0
     skip_duplicate_payloads: bool = True
     sensor_thresholds: dict[str, float] | None = None
+    sensor_map_entries: list[SensorMapEntry] | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -187,6 +257,7 @@ class Settings:
                 "SPECKLE_SKIP_DUPLICATE_PAYLOADS", default=True
             ),
             sensor_thresholds=_read_sensor_thresholds(),
+            sensor_map_entries=_read_sensor_map_entries(),
         )
 
 
@@ -205,6 +276,26 @@ class MqttToSpeckleBridge:
         self.last_sent_at_by_topic: dict[str, float] = {}
         self.last_payload_signature_by_topic: dict[str, str] = {}
         self.last_numeric_value_by_topic: dict[str, float] = {}
+        self.sensor_map_by_topic: dict[str, SensorMapEntry] = {}
+        self.sensor_map_by_device_and_type: dict[tuple[str, str], SensorMapEntry] = {}
+        self._index_sensor_map_entries()
+
+    def _index_sensor_map_entries(self) -> None:
+        for entry in self.settings.sensor_map_entries or []:
+            if entry.topic:
+                self.sensor_map_by_topic[entry.topic] = entry
+            if entry.device_id and entry.sensor_type:
+                self.sensor_map_by_device_and_type[
+                    (entry.device_id, entry.sensor_type)
+                ] = entry
+
+    def get_sensor_map_entry(self, topic: str) -> SensorMapEntry | None:
+        if topic in self.sensor_map_by_topic:
+            return self.sensor_map_by_topic[topic]
+        metadata = parse_topic_metadata(topic)
+        return self.sensor_map_by_device_and_type.get(
+            (metadata["device_id"], metadata["sensor_type"])
+        )
 
     def should_send(self, topic: str, payload: Any) -> tuple[bool, str]:
         now = time.time()
@@ -255,14 +346,42 @@ class MqttToSpeckleBridge:
     def send_to_speckle(self, topic: str, payload: Any) -> None:
         obj = Base()
         metadata = parse_topic_metadata(topic)
+        map_entry = self.get_sensor_map_entry(topic)
+        timestamp = time.time()
         obj["topic"] = topic
         obj["raw_topic"] = metadata["raw_topic"]
         obj["device_id"] = metadata["device_id"]
         obj["sensor_type"] = metadata["sensor_type"]
         obj["unit"] = metadata["unit"]
         obj["payload"] = payload if isinstance(payload, dict) else {"value": payload}
-        obj["timestamp"] = time.time()
-        obj["timestamp_local"] = format_timestamp_local(obj["timestamp"])
+        obj["timestamp"] = timestamp
+        obj["timestamp_local"] = format_timestamp_local(timestamp)
+        obj["value"] = _extract_numeric_value(payload)
+        obj["type"] = "telemetry"
+
+        if map_entry:
+            obj["sensor_id"] = map_entry.sensor_id
+            obj["room_id"] = map_entry.room_id
+            obj["level_id"] = map_entry.level_id
+            obj["building_id"] = map_entry.building_id
+            obj["speckle_element_id"] = map_entry.speckle_element_id
+            if map_entry.anchor_type:
+                obj["anchor_type"] = map_entry.anchor_type
+            if map_entry.anchor_category:
+                obj["anchor_category"] = map_entry.anchor_category
+            if map_entry.application_id:
+                obj["application_id"] = map_entry.application_id
+            obj["speckle_model_id"] = (
+                map_entry.speckle_model_id or self.settings.speckle_model_id
+            )
+            if map_entry.room_name:
+                obj["room_name"] = map_entry.room_name
+            if map_entry.zone_id:
+                obj["zone_id"] = map_entry.zone_id
+            if map_entry.zone_name:
+                obj["zone_name"] = map_entry.zone_name
+            if map_entry.tags:
+                obj["tags"] = map_entry.tags
 
         obj_id = send(obj, [self.transport])
         message = f"IoT: {topic}"
