@@ -71,6 +71,49 @@ The CLI tools will try these locations in order:
 - `.env` in the project root
 - `/home/system/.config/speckle-stack.env`
 
+### Cloud and self-hosted profiles
+
+This project supports both Speckle Cloud and self-hosted Speckle without code changes.
+The Python tools read the same core variables in both cases:
+
+- `SPECKLE_HOST`
+- `SPECKLE_TOKEN`
+- `SPECKLE_PROJECT_ID`
+- `SPECKLE_MODEL_ID`
+- `SPECKLE_USE_SSL`
+
+Use these example files as starting points:
+
+- [\.env.cloud.example](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/.env.cloud.example)
+- [\.env.selfhosted.example](C:/Users/jonew/Downloads/P_Kwan/speckle_arc/.env.selfhosted.example)
+
+Recommended setup:
+
+```powershell
+Copy-Item .env.cloud.example .env.cloud
+Copy-Item .env.selfhosted.example .env.selfhosted
+```
+
+Run against Speckle Cloud:
+
+```powershell
+$env:SPECKLE_ARC_ENV_FILE=".env.cloud"
+speckle-arc-mqtt
+```
+
+Run against self-hosted Speckle:
+
+```powershell
+$env:SPECKLE_ARC_ENV_FILE=".env.selfhosted"
+speckle-arc-mqtt
+```
+
+Notes:
+
+- Speckle Cloud should usually use `SPECKLE_USE_SSL=true`
+- Self-hosted deployments may use `false` or `true` depending on whether TLS is enabled
+- The self-hosted Docker values such as `SPECKLE_PUBLIC_HOST` and `SPECKLE_S3_BUCKET` are not needed for Speckle Cloud
+
 ## Run
 
 MQTT to Speckle bridge:
